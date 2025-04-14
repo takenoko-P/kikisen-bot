@@ -14,7 +14,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.voice_states = True
 intents.guilds = True
+intents.members = True
 
+# Botインスタンス生成
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # 定型文リスト
@@ -25,16 +27,16 @@ PHRASES = {
     "💀": "てきサンダーみえた",
 }
 
+# 起動時イベント
 @bot.event
 async def on_ready():
-    print(f"✅ ログイン完了：{bot.user}")
     try:
         synced = await bot.tree.sync()
-        print(f"🔁 スラッシュコマンド {len(synced)} 件同期済み")
+        print(f"✅ {bot.user} がオンラインになりました（{len(synced)}件のスラッシュコマンドを同期）")
     except Exception as e:
         print(f"❌ スラッシュコマンド同期失敗: {e}")
 
-# ✅ VCに誰もいなくなったら自動切断
+# VCに誰もいなくなったら自動切断
 @bot.event
 async def on_voice_state_update(member, before, after):
     voice_client = discord.utils.get(bot.voice_clients, guild=member.guild)
@@ -46,8 +48,10 @@ async def on_voice_state_update(member, before, after):
             await voice_client.disconnect()
             print("👋 誰もいなくなったのでVCから切断しました")
 
-# 🎙️ スラッシュコマンド
+# スラッシュコマンド
+
 @bot.tree.command(name="join", description="ボイスチャンネルに参加します")
+@app_commands.describe()
 async def join_slash(interaction: discord.Interaction):
     if interaction.user.voice:
         await interaction.user.voice.channel.connect()
@@ -56,6 +60,7 @@ async def join_slash(interaction: discord.Interaction):
         await interaction.response.send_message("❌ あなたはボイスチャンネルにいません。")
 
 @bot.tree.command(name="bye", description="ボイスチャンネルから退出します")
+@app_commands.describe()
 async def bye_slash(interaction: discord.Interaction):
     if interaction.guild.voice_client:
         await interaction.guild.voice_client.disconnect()
@@ -64,19 +69,20 @@ async def bye_slash(interaction: discord.Interaction):
         await interaction.response.send_message("❌ BotはVCに入っていません。")
 
 @bot.tree.command(name="menu", description="セリフボタンを表示します")
+@app_commands.describe()
 async def menu_slash(interaction: discord.Interaction):
-    view = PhraseMenuView(timeout=900)  # 15分間ボタン有効
+    view = PhraseMenuView(timeout=900)  # 15分有効
     await interaction.response.send_message(
         "🗣️ どのセリフを喋らせる？\n⚠️ ボタンが反応しなくなったら、もう一度 `/menu` を使ってね！",
         view=view
     )
 
-    # 15分後に通知を送信
+    # 15分後に通知
     await asyncio.sleep(900)
     await interaction.channel.send("⏰ ボタンの有効時間が切れました。再度 `/menu` を実行してね！")
 
+# ボタン関連
 
-# 🔘 ボタン関連
 class PhraseMenuView(View):
     def __init__(self, timeout=900):
         super().__init__(timeout=timeout)
@@ -101,7 +107,7 @@ class PhraseButton(Button):
         tts.save(filename)
 
         vc = interaction.guild.voice_client
-        vc.play(discord.FFmpegPCMAudio(filename))
+        vc.play(discord.FFmpegPCMAudio(executable="ffmpeg", source=filename))
 
         await interaction.followup.send(f"🗣️「{self.phrase}」を読み上げます！", ephemeral=True)
 
@@ -118,5 +124,53 @@ class RefreshButton(Button):
         view = PhraseMenuView()
         await interaction.response.send_message("🗣️ どのセリフを喋らせる？（再表示）", view=view, ephemeral=True)
 
-# 🚀 起動
+# 生存確認コマンド
+
+@bot.tree.command(name="seizon", description="指定したロールのメンバーの生存確認をします")
+@app_commands.describe(role="確認するロール")
+async def seizon(interaction: discord.Interaction, role: discord.Role):
+    guild = interaction.guild
+    await interaction.response.defer(thinking=True)
+
+    try:
+        members = [
+            m async for m in guild.fetch_members(limit=None)
+            if role in m.roles and not m.bot
+        ]
+    except discord.ClientException:
+        await interaction.followup.send("⚠ メンバーの取得に失敗しました。BotのIntents設定や権限を確認してください。")
+        return
+
+    if not members:
+        await interaction.followup.send("そのロールにはBot以外のメンバーがいません。")
+        return
+
+    mentions = " ".join(m.mention for m in members)
+    msg = await interaction.followup.send(
+        f"{interaction.user.mention}\n{role.mention} のメンバーの生存確認です。\n{mentions}"
+    )
+
+    await msg.add_reaction("☑")
+
+    await asyncio.sleep(300)  # 5分待機
+
+    new_msg = await interaction.channel.fetch_message(msg.id)
+    reaction = discord.utils.get(new_msg.reactions, emoji="☑")
+
+    reacted_users = []
+    if reaction:
+        async for user in reaction.users():
+            if not user.bot:
+                reacted_users.append(user)
+
+    not_responded = [m for m in members if m not in reacted_users]
+
+    if not not_responded:
+        await interaction.channel.send("✅ 全員の生存が確認できました！\n外交お願いします！")
+    else:
+        not_responded_mentions = " ".join(m.mention for m in not_responded)
+        await interaction.channel.send(f"⚠ 以下のメンバーが未反応です！\n{not_responded_mentions}")
+
+# Bot起動
 bot.run(TOKEN)
+
