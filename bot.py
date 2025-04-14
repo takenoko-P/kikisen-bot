@@ -73,7 +73,8 @@ async def menu_slash(interaction: discord.Interaction):
 
     # 15分後に通知を送信
     await asyncio.sleep(900)
-    await interaction.channel.send(f"⏰ {interaction.user.mention} ボタンの有効時間が切れました。再度 `/menu` を実行してね！")
+    await interaction.channel.send("⏰ ボタンの有効時間が切れました。再度 `/menu` を実行してね！")
+
 
 # 🔘 ボタン関連
 class PhraseMenuView(View):
