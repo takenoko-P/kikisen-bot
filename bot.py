@@ -33,6 +33,7 @@ async def on_ready():
     try:
         # 拡張機能を読み込む（←これを追加！）
         await bot.load_extension("nickname")
+        await bot.load_extension("start_record") 
 
         synced = await bot.tree.sync()
         print(f"✅ {bot.user} がオンラインになりました（{len(synced)}件のスラッシュコマンドを同期）")
