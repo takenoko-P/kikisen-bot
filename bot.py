@@ -187,19 +187,6 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
             f"{interaction.user.mention}\n⚠ 以下のメンバーが未反応です！\n{not_responded_mentions}"
         )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         
 
 # Bot起動
