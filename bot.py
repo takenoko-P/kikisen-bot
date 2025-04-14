@@ -147,29 +147,60 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
 
     mentions = " ".join(m.mention for m in members)
     msg = await interaction.followup.send(
-        f"{interaction.user.mention}\n{role.mention} のメンバーの生存確認です。\n{mentions}"
+        f"{role.mention} のメンバーの生存確認です。\n{mentions}"
     )
-
     await msg.add_reaction("☑")
 
-    await asyncio.sleep(300)  # 5分待機
+    reacted_users = set()
 
-    new_msg = await interaction.channel.fetch_message(msg.id)
-    reaction = discord.utils.get(new_msg.reactions, emoji="☑")
+    def check(reaction, user):
+        return (
+            reaction.message.id == msg.id and
+            str(reaction.emoji) == "☑" and
+            not user.bot and
+            user in members
+        )
 
-    reacted_users = []
-    if reaction:
-        async for user in reaction.users():
-            if not user.bot:
-                reacted_users.append(user)
+    timeout = 300  # 5分
+    while timeout > 0:
+        try:
+            reaction_event = await bot.wait_for("reaction_add", timeout=1.0, check=check)
+            reacted_users.add(reaction_event[1])
+            if all(m in reacted_users for m in members):
+                await interaction.channel.send(
+                    f"{interaction.user.mention}\n✅ 全員の生存が確認できました！\n外交お願いします！"
+                )
+                return
+            timeout -= 1.0
+        except asyncio.TimeoutError:
+            timeout = 0
+            break
 
     not_responded = [m for m in members if m not in reacted_users]
-
     if not not_responded:
-        await interaction.channel.send("✅ 全員の生存が確認できました！\n外交お願いします！")
+        await interaction.channel.send(
+            f"{interaction.user.mention}\n✅ 全員の生存が確認できました！\n外交お願いします！"
+        )
     else:
         not_responded_mentions = " ".join(m.mention for m in not_responded)
-        await interaction.channel.send(f"⚠ 以下のメンバーが未反応です！\n{not_responded_mentions}")
+        await interaction.channel.send(
+            f"{interaction.user.mention}\n⚠ 以下のメンバーが未反応です！\n{not_responded_mentions}"
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
 # Bot起動
 bot.run(TOKEN)
