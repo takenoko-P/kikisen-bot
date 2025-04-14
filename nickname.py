@@ -41,3 +41,21 @@ async def setnickname(self, interaction: discord.Interaction, user_id: str, nick
 
 async def setup(bot):
     await bot.add_cog(Nickname(bot))
+
+    @discord.app_commands.command(name="listnicknames", description="登録済みのニックネーム一覧を表示します")
+    async def listnicknames(self, interaction: discord.Interaction):
+        nicknames = load_nicknames()
+
+        if not nicknames:
+            await interaction.response.send_message("まだ登録されたニックネームはありません。", ephemeral=True)
+            return
+
+        # ID→ニックネームのリストを整形
+        lines = []
+        for user_id, nickname in nicknames.items():
+            mention = f"<@{user_id}>"
+            lines.append(f"{mention}：`{nickname}`")
+
+        text = "\n".join(lines)
+        await interaction.response.send_message(f"📋 登録済みのニックネーム一覧：\n{text}")
+
