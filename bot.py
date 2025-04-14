@@ -191,7 +191,7 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
         )
 
 
-@bot.tree.command(name="sync", description="Botのスラッシュコマンドを同期します（管理者のみ）")
+@bot.tree.command(name="sync", description="Botのスラッシュコマンドを同期します（P専用）")
 async def sync_commands(interaction: discord.Interaction):
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message("❌ このコマンドは管理者専用です。", ephemeral=True)

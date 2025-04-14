@@ -19,28 +19,24 @@ class Nickname(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-@discord.app_commands.command(name="setnickname", description="ユーザーのニックネームを設定します（管理者専用）")
-@discord.app_commands.describe(user_id="ニックネームを登録したいユーザーのID", nickname="登録するニックネーム")
-async def setnickname(self, interaction: discord.Interaction, user_id: str, nickname: str):
-    # 管理者権限チェック
-    if not interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message("❌ このコマンドは管理者専用です。", ephemeral=True)
-        return
+    @discord.app_commands.command(name="setnickname", description="ユーザーのニックネームを設定します（P専用）")
+    @discord.app_commands.describe(user_id="ニックネームを登録したいユーザーのID", nickname="登録するニックネーム")
+    async def setnickname(self, interaction: discord.Interaction, user_id: str, nickname: str):
+        # 管理者権限チェック
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("❌ このコマンドは管理者専用です。", ephemeral=True)
+            return
 
-    # IDが数値かチェック
-    if not user_id.isdigit():
-        await interaction.response.send_message("⚠️ ユーザーIDは数字で指定してください。", ephemeral=True)
-        return
+        # IDが数値かチェック
+        if not user_id.isdigit():
+            await interaction.response.send_message("⚠️ ユーザーIDは数字で指定してください。", ephemeral=True)
+            return
 
-    nicknames = load_nicknames()
-    nicknames[user_id] = nickname
-    save_nicknames(nicknames)
+        nicknames = load_nicknames()
+        nicknames[user_id] = nickname
+        save_nicknames(nicknames)
 
-    await interaction.response.send_message(f"📝 ユーザーID `{user_id}` にニックネーム `{nickname}` を設定しました！", ephemeral=True)
-
-
-async def setup(bot):
-    await bot.add_cog(Nickname(bot))
+        await interaction.response.send_message(f"📝 ユーザーID `{user_id}` にニックネーム `{nickname}` を設定しました！", ephemeral=True)
 
     @discord.app_commands.command(name="listnicknames", description="登録済みのニックネーム一覧を表示します")
     async def listnicknames(self, interaction: discord.Interaction):
@@ -50,7 +46,6 @@ async def setup(bot):
             await interaction.response.send_message("まだ登録されたニックネームはありません。", ephemeral=True)
             return
 
-        # ID→ニックネームのリストを整形
         lines = []
         for user_id, nickname in nicknames.items():
             mention = f"<@{user_id}>"
@@ -58,4 +53,8 @@ async def setup(bot):
 
         text = "\n".join(lines)
         await interaction.response.send_message(f"📋 登録済みのニックネーム一覧：\n{text}")
+
+async def setup(bot):
+    await bot.add_cog(Nickname(bot))
+
 
