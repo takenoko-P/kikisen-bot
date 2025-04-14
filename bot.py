@@ -191,14 +191,20 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
         )
 
 
-@bot.tree.command(name="sync", description="Botのスラッシュコマンドを同期します（P専用）")
-async def sync_commands(interaction: discord.Interaction):
+@discord.app_commands.command(name="sync", description="アプリコマンドをこのサーバーに同期します（P専用）")
+async def sync(self, interaction: discord.Interaction):
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message("❌ このコマンドは管理者専用です。", ephemeral=True)
         return
 
-    await bot.tree.sync()
-    await interaction.response.send_message("✅ スラッシュコマンドを同期しました！", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)  # まず応答予約
+
+    try:
+        synced = await self.bot.tree.sync(guild=interaction.guild)
+        await interaction.followup.send(f"✅ このサーバーに {len(synced)} 個のスラッシュコマンドを同期しました！", ephemeral=True)
+    except Exception as e:
+        await interaction.followup.send(f"⚠️ 同期に失敗しました: `{e}`", ephemeral=True)
+
 
         
 
