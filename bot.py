@@ -190,6 +190,16 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
             f"{interaction.user.mention}\n⚠ 以下のメンバーが未反応です！\n{not_responded_mentions}"
         )
 
+
+@bot.tree.command(name="sync", description="Botのスラッシュコマンドを同期します（管理者のみ）")
+async def sync_commands(interaction: discord.Interaction):
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("❌ このコマンドは管理者専用です。", ephemeral=True)
+        return
+
+    await bot.tree.sync()
+    await interaction.response.send_message("✅ スラッシュコマンドを同期しました！", ephemeral=True)
+
         
 
 # Bot起動
