@@ -1,0 +1,26 @@
+name: Control Render Bot
+
+on:
+  schedule:
+    - cron: '0 18 * * *'   # JST 3:00 → 停止
+    - cron: '0 9 * * *'    # JST 18:00 → 起動
+  workflow_dispatch:       # 手動実行も可能！
+
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide action (suspend or resume)
+        id: set_action
+        run: |
+          hour=$(date -u +%H)
+          if [ "$hour" -eq "18" ]; then
+            echo "action=suspend" >> $GITHUB_OUTPUT
+          else
+            echo "action=resume" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Control Render service via API
+        run: |
+          curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/${{ steps.set_action.outputs.action }}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
