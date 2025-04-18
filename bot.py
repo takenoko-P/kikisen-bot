@@ -159,6 +159,8 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
     )
     await msg.add_reaction("☑")
 
+    await asyncio.sleep(1)  # ← ここでBotの☑リアクション完了を待つ
+
     reacted_users = set()
 
     def check(reaction, user):
@@ -166,23 +168,25 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
             reaction.message.id == msg.id and
             str(reaction.emoji) == "☑" and
             not user.bot and
-            user in members
+            user in members and
+            user not in reacted_users
         )
 
-    timeout = 300  # 5分
-    while timeout > 0:
+    timeout = 300  # 秒（5分）
+    elapsed = 0
+    interval = 5  # 5秒ごとに反応をチェック
+
+    while elapsed < timeout:
         try:
-            reaction_event = await bot.wait_for("reaction_add", timeout=1.0, check=check)
+            reaction_event = await bot.wait_for("reaction_add", timeout=interval, check=check)
             reacted_users.add(reaction_event[1])
             if all(m in reacted_users for m in members):
                 await interaction.channel.send(
                     f"{interaction.user.mention}\n✅ 全員の生存が確認できました！\n外交お願いします！"
                 )
                 return
-            timeout -= 1.0
         except asyncio.TimeoutError:
-            timeout = 0
-            break
+            elapsed += interval
 
     not_responded = [m for m in members if m not in reacted_users]
     if not not_responded:
@@ -194,6 +198,7 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
         await interaction.channel.send(
             f"{interaction.user.mention}\n⚠ 以下のメンバーが未反応です！\n{not_responded_mentions}"
         )
+
 
 
 @bot.tree.command(name="sync", description="アプリコマンドをこのサーバーに同期します（P専用）")
