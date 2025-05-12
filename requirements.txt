@@ -3,3 +3,5 @@ gTTS
 PyNaCl
 pytesseract
 pillow
+opencv-python
+numpy

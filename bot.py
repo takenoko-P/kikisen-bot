@@ -212,7 +212,11 @@ BACKGROUND_DIR = "assets/backgrounds"
 OUTPUT_IMAGE = "output_result.png"
 
 # --- OCR設定 ---
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # 適宜変更
+if os.name == "nt":  # Windows
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+else:  # Linux (例：Render)
+    pytesseract.pytesseract.tesseract_cmd = 'tesseract'
+
 
 # --- チーム名識別 ---
 def extract_scores(image_path):
