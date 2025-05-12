@@ -1,3 +1,5 @@
 discord.py
 gTTS
 PyNaCl
+pytesseract
+pillow
