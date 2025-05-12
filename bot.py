@@ -27,19 +27,6 @@ PHRASES = {
     "💀": "てきサンダーみえた",
 }
 
-# 起動時イベント
-@bot.event
-async def on_ready():
-    try:
-        # 拡張機能を読み込む（←これを追加！）
-        await bot.load_extension("nickname")
-        await bot.load_extension("start_record") 
-
-        synced = await bot.tree.sync()
-        print(f"✅ {bot.user} がオンラインになりました（{len(synced)}件のスラッシュコマンドを同期）")
-    except Exception as e:
-        print(f"❌ スラッシュコマンド同期失敗: {e}")
-
 # VCに誰もいなくなったら自動切断
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -200,20 +187,16 @@ async def seizon(interaction: discord.Interaction, role: discord.Role):
         )
 
 
-
-@bot.tree.command(name="sync", description="アプリコマンドをこのサーバーに同期します（P専用）")
-async def sync_commands(interaction: discord.Interaction):
-    if not interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message("❌ このコマンドは管理者専用です。", ephemeral=True)
-        return
-
-    await interaction.response.defer(ephemeral=True)  # 応答を予約して待機状態にする
-
+# 起動時イベント
+@bot.event
+async def on_ready():
+    print(f"✅ {bot.user} がオンラインになりました")
     try:
-        synced = await bot.tree.sync(guild=interaction.guild)
-        await interaction.followup.send(f"✅ このサーバーに {len(synced)} 個のスラッシュコマンドを同期しました！", ephemeral=True)
+        synced = await bot.tree.sync()
+        print(f"✅ スラッシュコマンドを {len(synced)} 件同期しました")
     except Exception as e:
-        await interaction.followup.send(f"⚠️ 同期に失敗しました: `{e}`", ephemeral=True)
+        print(f"❌ スラッシュコマンドの同期に失敗しました: {e}")
+
 
 
 
