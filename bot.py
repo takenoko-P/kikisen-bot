@@ -277,9 +277,9 @@ def draw_result(team_scores):
     print(f"✅ 出力完了: {OUTPUT_IMAGE}")
 
 # --- 実行 ---
-if __name__ == "__main__":
-    scores = extract_scores(INPUT_IMAGE)
-    draw_result(scores)
+#if __name__ == "__main__":
+#   scores = extract_scores(INPUT_IMAGE)
+#    draw_result(scores)
         
 
 # Bot起動
